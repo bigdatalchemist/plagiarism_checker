@@ -1,0 +1,163 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plagiarism Checker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h1 class="title">Plagiarism Checker</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        <div class="mode-selection">
+            <label><input type="radio" name="mode" value="text" {% if mode == 'text' %}checked{% endif %}> Text</label>
+            <label><input type="radio" name="mode" value="file" {% if mode == 'file' %}checked{% endif %}> File</label>
+            <label><input type="radio" name="mode" value="url" {% if mode == 'url' %}checked{% endif %}> URL</label>
+        </div>
+
+        <div id="text-inputs" class="{% if mode != 'text' %}hidden{% endif %}">
+            <textarea name="text1" placeholder="Enter first text">{{ form_data.text1 }}</textarea>
+            <textarea name="text2" placeholder="Enter second text">{{ form_data.text2 }}</textarea>
+        </div>
+
+        <div id="file-inputs" class="{% if mode != 'file' %}hidden{% endif %}">
+            <input type="file" name="file1">
+            <input type="file" name="file2">
+
+            <label for="pages">Pages to analyze:</label>
+            <select name="pages" id="pages">
+                {% for i in range(1, page_limit + 1) %}
+                    <option value="{{ i }}" {% if form_data.pages and form_data.pages == i %}selected{% endif %}>{{ i }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="url-inputs" class="{% if mode != 'url' %}hidden{% endif %}">
+            <input type="url" name="url1" placeholder="Enter first URL" value="{{ form_data.url1 }}">
+            <input type="url" name="url2" placeholder="Enter second URL" value="{{ form_data.url2 }}">
+        </div>
+
+        <button type="submit">Check Plagiarism</button>
+    </form>
+
+    {% if result %}
+    <div class="results">
+
+        <!-- Word Similarity -->
+        <button class="collapsible">Word Similarity Result</button>
+        <div class="content">
+            <p><strong>Score:</strong>
+                <span class="
+                    {% if result.word_score >= 0.75 %}
+                        high-score
+                    {% elif result.word_score >= 0.4 %}
+                        medium-score
+                    {% else %}
+                        low-score
+                    {% endif %}
+                ">
+                    {{ result.word_score | round(2) }} -
+                    {% if result.word_score >= 0.75 %}
+                        High Similarity
+                    {% elif result.word_score >= 0.4 %}
+                        Moderate Similarity
+                    {% else %}
+                        Low Similarity
+                    {% endif %}
+                </span>
+            </p>
+
+            <p><strong>Similar Words:</strong> {{ result.similar_words | join(", ") }}</p>
+        </div>
+
+        <!-- Semantic Similarity -->
+        <button class="collapsible">Semantic Similarity Result</button>
+        <div class="content">
+            <p><strong>Score:</strong>
+                <span class="
+                    {% if result.semantic_score >= 0.75 %}
+                        high-score
+                    {% elif result.semantic_score >= 0.4 %}
+                        medium-score
+                    {% else %}
+                        low-score
+                    {% endif %}
+                ">
+                    {{ result.semantic_score | round(2) }} -
+                    {% if result.semantic_score >= 0.75 %}
+                        High Similarity
+                    {% elif result.semantic_score >= 0.4 %}
+                        Moderate Similarity
+                    {% else %}
+                        Low Similarity
+                    {% endif %}
+                </span>
+            </p>
+
+            <ul>
+                {% for phrase in result.paraphrased_phrases %}
+                    <li>{{ phrase }}</li>
+                {% endfor %}
+            </ul>
+
+            <!-- ✅ Added Selected Pages Display -->
+            {% if selected_indexes1 and selected_indexes2 %}
+                <div class="selected-pages">
+                    <h3>Selected Pages Used:</h3>
+                    <p><strong>File 1 Pages:</strong> {{ selected_indexes1 | join(", ") }}</p>
+                    <p><strong>File 2 Pages:</strong> {{ selected_indexes2 | join(", ") }}</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+    {% endif %}
+        <!-- Display uploaded files after form submission -->
+{% if uploaded_files['file1'] or uploaded_files['file2'] %}
+    <div class="uploaded-files-info">
+        <h3>Uploaded Files:</h3>
+        {% if uploaded_files['file1'] %}
+            <p><strong>File 1:</strong> {{ uploaded_files['file1'] }}</p>
+        {% endif %}
+        {% if uploaded_files['file2'] %}
+            <p><strong>File 2:</strong> {{ uploaded_files['file2'] }}</p>
+        {% endif %}
+    </div>
+ {% endif %}
+
+<script>
+    // Mode switcher
+    const modeRadios = document.querySelectorAll('input[name="mode"]');
+    const textInputs = document.getElementById('text-inputs');
+    const fileInputs = document.getElementById('file-inputs');
+    const urlInputs = document.getElementById('url-inputs');
+
+    function updateVisibility(selectedMode) {
+        textInputs.classList.add('hidden');
+        fileInputs.classList.add('hidden');
+        urlInputs.classList.add('hidden');
+
+        if (selectedMode === 'text') textInputs.classList.remove('hidden');
+        if (selectedMode === 'file') fileInputs.classList.remove('hidden');
+        if (selectedMode === 'url') urlInputs.classList.remove('hidden');
+    }
+
+    modeRadios.forEach(radio => {
+        radio.addEventListener('change', () => updateVisibility(radio.value));
+    });
+
+    updateVisibility("{{ mode }}");
+
+    //Collapsible toggle logic
+    const collapsibles = document.querySelectorAll(".collapsible");
+    collapsibles.forEach(button => {
+        button.addEventListener("click", function () {
+            this.classList.toggle("active");
+            const content = this.nextElementSibling;
+            content.style.display = content.style.display === "block" ? "none" : "block";
+        });
+    });
+</script>
+</body>
+</html>

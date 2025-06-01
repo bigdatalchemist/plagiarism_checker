@@ -1,0 +1,26 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+
+# Environment variables / secrets
+.env
+
+# IDE/Editor folders
+.vscode/
+.idea/
+
+# Uploads and temp files
+uploads/
+*.log
+*.sqlite3
+
+# Model files
+my_model/
+
+# OS specific files
+Thumbs.db
+.DS_Store
