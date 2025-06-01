@@ -7,4 +7,6 @@ services:
     envVars:
       - key: FLASK_ENV
         value: production
+      - key: PYTHON_VERSION
+        value: 3.10.13  # ✅ Prevents incompatibility with pandas/numpy
     staticPublishPath: static
